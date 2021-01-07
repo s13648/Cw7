@@ -1,11 +1,14 @@
+using System.Text;
 using Cw7.Middlewares;
 using Cw7.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Cw7
 {
@@ -21,6 +24,21 @@ namespace Cw7
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidIssuer = "Gakko",
+                        ValidAudience = "Students",
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["SecretKey"]))
+                    };
+                });
+
+
             services.AddTransient<IStudyDbService, StudyDbService>();
             services.AddTransient<IStudentDbService, StudentDbService>();
             services.AddTransient<IEnrollmentDbService, EnrollmentDbService>();
@@ -69,6 +87,7 @@ namespace Cw7
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
             
             app.UseEndpoints(endpoints =>

@@ -1,10 +1,13 @@
 ﻿using System.Threading.Tasks;
 using Cw7.Dto;
 using Cw7.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cw7.Controllers
 {
+    [Authorize(Roles = "employee")]
     [ApiController]
     [Route("api/enrollments")]
     public class EnrollmentsController : ControllerBase
@@ -32,7 +35,7 @@ namespace Cw7.Controllers
 
             var enrollment = await enrollmentDbService.EnrollStudent(model,study);
 
-            return StatusCode(201, enrollment);
+            return StatusCode(StatusCodes.Status201Created, enrollment);
         }
 
         [HttpPost("promotions")]
@@ -44,7 +47,7 @@ namespace Cw7.Controllers
 
             await enrollmentDbService.Promotions(promotions);
 
-            return StatusCode(201, await enrollmentDbService.GetBy(promotions.Studies, promotions.Semester + 1));
+            return StatusCode(StatusCodes.Status201Created, await enrollmentDbService.GetBy(promotions.Studies, promotions.Semester + 1));
         }
     }
 }

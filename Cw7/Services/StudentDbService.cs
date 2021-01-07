@@ -45,12 +45,14 @@ namespace Cw7.Services
                            ([IndexNumber]
                            ,[FirstName]
                            ,[LastName]
+                           ,[Password]
                            ,[BirthDate]
                            ,[IdEnrollment])
                      VALUES
                            (@IndexNumber
                            ,@FirstName
                            ,@LastName
+                           ,@Password
                            ,@BirthDate
                            ,@IdEnrollment)";
 
@@ -109,6 +111,7 @@ namespace Cw7.Services
 
             command.Parameters.AddWithValue("@IndexNumber", model.IndexNumber);
             command.Parameters.AddWithValue("@FirstName", model.FirstName);
+            command.Parameters.AddWithValue("@Password", model.Password);
             command.Parameters.AddWithValue("@LastName", model.LastName);
             command.Parameters.AddWithValue("@BirthDate", model.BirthDate);
             command.Parameters.AddWithValue("@IdEnrollment", idEnrollment);

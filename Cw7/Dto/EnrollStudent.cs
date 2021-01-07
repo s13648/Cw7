@@ -19,5 +19,8 @@ namespace Cw7.Dto
 
         [Required]
         public string IndexNumber { get; set; }
+
+        [Required]
+        public string Password { get; set; }
     }
 }
