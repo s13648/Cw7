@@ -32,6 +32,7 @@ namespace Cw7.Services
 	                                        S.FirstName,
 	                                        S.LastName,
 	                                        S.BirthDate,
+                                            S.Password,
 	                                        ST.Name AS StudyName,
 	                                        E.Semester
                                         FROM 
@@ -136,6 +137,7 @@ namespace Cw7.Services
                     FirstName = sqlDataReader[nameof(Student.FirstName)].ToString(),
                     LastName = sqlDataReader[nameof(Student.LastName)].ToString(),
                     Semester = int.Parse(sqlDataReader[nameof(Student.Semester)].ToString()),
+                    Password = sqlDataReader[nameof(Student.Password)].ToString(),
                     StudyName = sqlDataReader[nameof(Student.StudyName)].ToString()
                 };
             }

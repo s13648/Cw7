@@ -47,6 +47,8 @@ namespace Cw7.Controllers
             if (studentByIndex == null)
                 return StatusCode(StatusCodes.Status403Forbidden);
 
+            if (studentByIndex.Password != request.Password)
+                return StatusCode(StatusCodes.Status403Forbidden);
 
             var claims = new[]
             {

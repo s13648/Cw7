@@ -13,5 +13,6 @@ namespace Cw7.Dto
         public string StudyName { get; set; }
         
         public int Semester { get; set; }
+        public string Password { get; set; }
     }
 }
