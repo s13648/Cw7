@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Cw7.Dto;
+using Cw7.Helper;
 
 namespace Cw7.Services
 {
@@ -33,6 +34,7 @@ namespace Cw7.Services
 	                                        S.LastName,
 	                                        S.BirthDate,
                                             S.Password,
+                                            S.Salt,
                                             S.IndexNumber,
 	                                        ST.Name AS StudyName,
 	                                        E.Semester
@@ -48,6 +50,7 @@ namespace Cw7.Services
 	                                        S.LastName,
 	                                        S.BirthDate,
                                             S.Password,
+                                            S.Salt,
                                             S.IndexNumber,
 	                                        ST.Name AS StudyName,
 	                                        E.Semester
@@ -63,6 +66,7 @@ namespace Cw7.Services
                            ,[FirstName]
                            ,[LastName]
                            ,[Password]
+                           ,[Salt]
                            ,[BirthDate]
                            ,[IdEnrollment])
                      VALUES
@@ -70,6 +74,7 @@ namespace Cw7.Services
                            ,@FirstName
                            ,@LastName
                            ,@Password
+                           ,@Salt
                            ,@BirthDate
                            ,@IdEnrollment)";
 
@@ -129,11 +134,13 @@ namespace Cw7.Services
                 Transaction = sqlTransaction
             };
 
+            var salt = PasswordHashHelper.CreateSalt();
             command.Parameters.AddWithValue("@IndexNumber", model.IndexNumber);
             command.Parameters.AddWithValue("@FirstName", model.FirstName);
-            command.Parameters.AddWithValue("@Password", model.Password);
+            command.Parameters.AddWithValue("@Password", PasswordHashHelper.Create(model.Password,salt));
             command.Parameters.AddWithValue("@LastName", model.LastName);
             command.Parameters.AddWithValue("@BirthDate", model.BirthDate);
+            command.Parameters.AddWithValue("@Salt", salt);
             command.Parameters.AddWithValue("@IdEnrollment", idEnrollment);
 
             await command.ExecuteNonQueryAsync();
@@ -156,6 +163,7 @@ namespace Cw7.Services
                     FirstName = sqlDataReader[nameof(Student.FirstName)].ToString(),
                     LastName = sqlDataReader[nameof(Student.LastName)].ToString(),
                     IndexNumber = sqlDataReader[nameof(Student.IndexNumber)].ToString(),
+                    Salt = sqlDataReader[nameof(Student.Salt)].ToString(),
                     Semester = int.Parse(sqlDataReader[nameof(Student.Semester)].ToString()),
                     Password = sqlDataReader[nameof(Student.Password)].ToString(),
                     StudyName = sqlDataReader[nameof(Student.StudyName)].ToString()

@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Cw7.Dto;
+using Cw7.Helper;
 using Cw7.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -21,7 +22,7 @@ namespace Cw7.Controllers
         private readonly IAccountService accountService;
 
         public StudentsController(
-            IStudentDbService studentDbService,
+            IStudentDbService studentDbService, 
             IAccountService accountService)
         {
             this.studentDbService = studentDbService;
@@ -48,7 +49,7 @@ namespace Cw7.Controllers
             if (studentByIndex == null)
                 return StatusCode(StatusCodes.Status403Forbidden);
 
-            if (studentByIndex.Password != request.Password)
+            if (!PasswordHashHelper.Validate(studentByIndex.Password,studentByIndex.Salt,request.Password))
                 return StatusCode(StatusCodes.Status403Forbidden);
 
             var token = await accountService.GenerateAccessToken(studentByIndex);
