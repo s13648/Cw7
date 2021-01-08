@@ -41,6 +41,7 @@ namespace Cw7
 
             services.AddTransient<IStudyDbService, StudyDbService>();
             services.AddTransient<IStudentDbService, StudentDbService>();
+            services.AddTransient<IAccountService, AccountService>();
             services.AddTransient<IEnrollmentDbService, EnrollmentDbService>();
 
             services.AddTransient<IConfig,Config>(b => new Config  

@@ -33,6 +33,7 @@ namespace Cw7.Services
 	                                        S.LastName,
 	                                        S.BirthDate,
                                             S.Password,
+                                            S.IndexNumber,
 	                                        ST.Name AS StudyName,
 	                                        E.Semester
                                         FROM 
@@ -41,6 +42,21 @@ namespace Cw7.Services
 	                                        [Studies] AS ST ON E.IdStudy = ST.IdStudy
                                         WHERE
                                             S.[IndexNumber] = @IndexNumber";
+
+        private const string GetByRefreshTokenQuery = @"SELECT 
+	                                        S.FirstName,
+	                                        S.LastName,
+	                                        S.BirthDate,
+                                            S.Password,
+                                            S.IndexNumber,
+	                                        ST.Name AS StudyName,
+	                                        E.Semester
+                                        FROM 
+	                                        [Student] AS S JOIN 
+	                                        [Enrollment] AS E ON S.IdEnrollment = E.IdEnrollment JOIN
+	                                        [Studies] AS ST ON E.IdStudy = ST.IdStudy
+                                        WHERE
+                                            S.[RefreshToken] = @RefreshToken";
 
         private const string InsertStudentQuery = @"INSERT INTO [dbo].[Student]
                            ([IndexNumber]
@@ -57,6 +73,9 @@ namespace Cw7.Services
                            ,@BirthDate
                            ,@IdEnrollment)";
 
+        private const string SetRefreshTokenQuery = @"UPDATE Student
+                                                    SET RefreshToken = @RefreshToken
+                                                    WHERE IndexNumber = @IndexNumber";
 
         private readonly IConfig config;
 
@@ -136,6 +155,49 @@ namespace Cw7.Services
                     BirthDate = DateTime.Parse(sqlDataReader[nameof(Student.BirthDate)]?.ToString()),
                     FirstName = sqlDataReader[nameof(Student.FirstName)].ToString(),
                     LastName = sqlDataReader[nameof(Student.LastName)].ToString(),
+                    IndexNumber = sqlDataReader[nameof(Student.IndexNumber)].ToString(),
+                    Semester = int.Parse(sqlDataReader[nameof(Student.Semester)].ToString()),
+                    Password = sqlDataReader[nameof(Student.Password)].ToString(),
+                    StudyName = sqlDataReader[nameof(Student.StudyName)].ToString()
+                };
+            }
+
+            return null;
+        }
+
+        public async Task SetRefreshToken(string studentIndex, Guid refreshToken)
+        {
+            await using var sqlConnection = new SqlConnection(config.ConnectionString);
+            await using var command = new SqlCommand(SetRefreshTokenQuery)
+            {
+                Connection = sqlConnection,
+                CommandType = CommandType.Text,
+            };
+
+            command.Parameters.AddWithValue("@IndexNumber", studentIndex);
+            command.Parameters.AddWithValue("@RefreshToken", refreshToken);
+            
+            await sqlConnection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<Student> GetByRefreshToken(Guid refreshToken)
+        {
+            await using var sqlConnection = new SqlConnection(config.ConnectionString);
+            await using var command = new SqlCommand(GetByRefreshTokenQuery, sqlConnection) { CommandType = CommandType.Text };
+            command.Parameters.AddWithValue("RefreshToken", refreshToken);
+
+            await sqlConnection.OpenAsync();
+
+            await using var sqlDataReader = await command.ExecuteReaderAsync();
+            while (await sqlDataReader.ReadAsync())
+            {
+                return new Student
+                {
+                    BirthDate = DateTime.Parse(sqlDataReader[nameof(Student.BirthDate)]?.ToString()),
+                    FirstName = sqlDataReader[nameof(Student.FirstName)].ToString(),
+                    LastName = sqlDataReader[nameof(Student.LastName)].ToString(),
+                    IndexNumber = sqlDataReader[nameof(Student.IndexNumber)].ToString(),
                     Semester = int.Parse(sqlDataReader[nameof(Student.Semester)].ToString()),
                     Password = sqlDataReader[nameof(Student.Password)].ToString(),
                     StudyName = sqlDataReader[nameof(Student.StudyName)].ToString()

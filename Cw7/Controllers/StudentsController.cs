@@ -8,7 +8,6 @@ using Cw7.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Cw7.Controllers
@@ -19,12 +18,14 @@ namespace Cw7.Controllers
     public class StudentsController : ControllerBase
     {
         private readonly IStudentDbService studentDbService;
-        private readonly IConfiguration configuration;
+        private readonly IAccountService accountService;
 
-        public StudentsController(IStudentDbService studentDbService,IConfiguration configuration)
+        public StudentsController(
+            IStudentDbService studentDbService,
+            IAccountService accountService)
         {
             this.studentDbService = studentDbService;
-            this.configuration = configuration;
+            this.accountService = accountService;
         }
 
         [HttpGet]
@@ -50,33 +51,22 @@ namespace Cw7.Controllers
             if (studentByIndex.Password != request.Password)
                 return StatusCode(StatusCodes.Status403Forbidden);
 
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, request.Login),
-                new Claim(ClaimTypes.Name, $"{studentByIndex.FirstName} {studentByIndex.LastName}"),
-                new Claim(ClaimTypes.Role, "student"),
-                new Claim(ClaimTypes.Role, "employee")
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["SecretKey"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken
-            (
-                issuer: "Gakko",
-                audience: "Students",
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(10),
-                signingCredentials: creds
-            );
-
-            return Ok(new
-            {
-                token = new JwtSecurityTokenHandler().WriteToken(token),
-                refreshToken = Guid.NewGuid()
-            });
+            var token = await accountService.GenerateAccessToken(studentByIndex);
+            return Ok(token);
         }
 
+        [AllowAnonymous]
+        [HttpPost("refreshToken/{refreshToken}")]
+        public async Task<IActionResult> RefreshToken(Guid refreshToken)
+        {
+            var studentByIndex = await studentDbService.GetByRefreshToken(refreshToken);
+            if (studentByIndex == null)
+                return StatusCode(StatusCodes.Status403Forbidden);
+
+            
+            var token = await accountService.GenerateAccessToken(studentByIndex);
+            return Ok(token);
+        }
 
         [HttpPut("{id}")]
         public IActionResult PutStudent(int id)
